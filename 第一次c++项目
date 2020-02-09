@@ -1,0 +1,349 @@
+#include<iostream>
+#include <windows.h>
+#include<stdio.h>
+#include <stdlib.h>
+#include<string>
+#define north 1
+#define south 2
+#define west  3
+#define east  4
+using namespace  std;
+int mazeshuzu[60][80];int width,height;
+class Mazemap
+{
+public:
+    Mazemap():mazewall('#')
+    {
+        width=60;height=80;
+    }
+    Mazemap(int *a,int x,int y):mazewall('#')
+    {
+        width=x;height=y;
+        for(int i=0;i<x;i++)
+        {
+            for(int j=0;j<y;j++)
+            {
+                mazeshuzu[i][j] = *a;
+                a++;
+            }
+        }
+
+    }
+    void drawmap() const
+    {
+        for(int i=0;i<width;i++)
+	{
+		for(int j=0;j<height;j++)
+		{
+			if(mazeshuzu[i][j]==1)
+			{
+				cout << " ";
+			}
+			else
+			{
+				cout <<"#";
+			}
+		}
+		cout << endl;
+	}
+    }
+     bool check1(int mazeX, int mazeY )//检查该位置上是否是墙壁
+    {
+        if(mazeshuzu[mazeY][mazeX] == 0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+    }
+     bool check2(int mazeX,int mazeY)//检查该位置是否是出口
+    {
+        //检查迷宫左右两侧
+	if(mazeX == 0 || mazeX == (width - 1))
+	{
+		if(mazeshuzu[mazeY][mazeX] == 1)
+		{
+			return true;
+		}
+	}
+	//检查迷宫上下两侧
+	if(mazeY == 0 || mazeY == (height - 1))
+	{
+		if(mazeshuzu[mazeY][mazeX] ==1)
+		{
+			return true;
+		}
+	}
+	return false;
+    }
+private:
+    char mazewall;//墙的的符号
+};
+class Mazeperson
+{
+public:
+    Mazeperson(int X, int Y,int myForward):personpic('S')
+    {
+        positionX = X;
+        positionY = Y;
+        preX = 10000;
+        preY = 10000;
+        forward = myForward;
+        outOrNot = false;
+    }
+    void savezuobiao()//保存前一个位置坐标
+     {
+         preX = positionX;
+         preY = positionY;
+     }
+    void moveSouth()
+    {
+        //保存前一个坐标位置
+        savezuobiao();
+        //向南移动一个位置
+        positionX = positionX;
+        positionY = positionY + 1;
+    }
+    void moveNorth()
+    {
+	//保存前一个坐标位置
+	savezuobiao();
+	//向北移动一个位置
+	positionX = positionX;
+	positionY = positionY - 1;
+    }
+    void moveWest()
+    {
+	//保存前一个坐标位置
+	savezuobiao();
+	//向西移动一个位置
+	positionX = positionX - 1;
+	positionY = positionY;
+}
+    void moveEast()
+    {
+        //保存前一个坐标位置
+        savezuobiao();
+        //向东移动一个位置
+        positionX = positionX + 1;
+        positionY = positionY;
+    }
+    void gotoxy(int x, int y)
+    {
+        COORD cd;//在头文件<windows.h>下
+        cd.X   =   x;
+        cd.Y   =   y;
+        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE),cd);
+    };
+    void drawPerson()
+    {
+	//在当前位置上绘制人
+	char Road =' ' ;
+	gotoxy(preX,preY);
+	cout << Road;
+	gotoxy(positionX,positionY);
+	cout << personpic;//为制作动画效果使用时间延迟
+	Sleep(personspeed);
+    }
+    Mazeperson &setPersonChar(char personChar)//？？？？？？？？？？？？？？？？？不需要
+    {
+	personpic = personChar;
+	return *this;
+    }
+    void start()
+    {
+        int i=0;//计数器
+        while(!outOrNot)//没结束的话
+        {
+            gotoxy(0,15);
+            cout<<i;i++;
+            moveForward();
+
+        }
+    }
+    void setPersonPic(char personChar)
+    {
+	personpic = personChar;
+}
+int getx()
+{
+    return positionX;
+}
+int gety()
+{
+    return positionY;
+}
+    void setPersonSpeed(int speed)
+    {
+	//设置一个时间延迟的值
+        personspeed = speed * 100;
+        cout<<endl<<"现在是速度 "<<speed<<" 档"<<endl;
+    }
+private:
+    int preX;         //声明前一个横坐标
+	int preY;          //声明前一个纵坐标
+	int positionX;      //声明当前横坐标
+	int positionY;      //声明当前纵坐标
+	int personspeed;     ////声明当前人的移动速度
+    char personpic;//人的符号
+    int forward;//表示人的方向
+    int outOrNot;//声明人是否走出迷宫
+    void turnLeft()//左转函数
+    {
+	switch(forward)
+	{
+	case 1: forward = 3;  break;
+	case 3:	forward = 2; break;
+	case 2:	forward = 4;  break;
+	case 4:	forward = 1; break;
+	default: cout << "方向错误。" << endl;
+	}
+    }
+    void turnRight()
+    {
+	switch(forward)
+	{
+	case 1: forward = 4;  break;
+	case 3:  forward = 1; break;
+	case 2: forward = 3;  break;
+	case 4:  forward = 2; break;
+	default: cout << "方向错误。" << endl;
+	}
+    }
+    void goAhead()//依原方向前进
+    {
+        switch(forward)
+        {
+            case 1: moveNorth(); break;
+            case 3:  moveWest();  break;
+            case 2: moveSouth(); break;
+            case 4:  moveEast();  break;
+            default: cout << "方向不明，无法前进。" << endl;
+        }
+	//形成动画
+	drawPerson();
+	//检测是否到达出口
+	//如果到达出口，则提示
+	if(check2(positionX,positionY)==1)
+	{
+		gotoxy(0,22);
+		cout << "恭喜您，孙先生您真是太聪明了！" << endl;
+		outOrNot = true;
+	}
+    }
+    bool moveForward()
+    {
+	//检查当前位置是否合法
+	if(check1(positionX,positionY)==1)
+	{
+		//检测到当前位置是墙，提示用户设计非法并返回
+		gotoxy(0,23);
+		cout << "检测到当前设定的起始位置是墙壁，请重新设定。" << endl;
+		outOrNot = true;
+		return false;
+	}
+	//判断如果前一个位置的坐标是10000，则直接在当前位置绘制人
+	if(preX == 10000 || preY == 10000)
+	{
+		gotoxy(positionX,positionY);
+		cout << personpic;
+		Sleep(5000);
+	}
+	//检查右侧是否是墙，如果是墙，检查前方是否是墙，如果不是墙则前进，前进后检查是否是出口
+	int rightX;
+	int rightY;
+	int forwardX;
+	int forwardY;
+	switch(forward)
+	{
+	case 2: rightX = positionX - 1; rightY = positionY;//2表示south
+		forwardX = positionX; forwardY = positionY + 1; break;
+	case 1: rightX = positionX + 1; rightY = positionY;//1表示north
+	    forwardX = positionX; forwardY = positionY - 1;	break;
+	case 3:  rightX = positionX; rightY = positionY - 1;//3表示west
+		forwardX = positionX - 1; forwardY = positionY;	break;
+	case 4:  rightX = positionX; rightY = positionY + 1;//4表示east
+		forwardX = positionX + 1; forwardY = positionY;	break;
+	}
+	//如果右侧是墙
+	if(check1(rightX,rightY)==1)
+	{
+
+		//检测前方也是墙壁
+		if(check1(forwardX,forwardY)==1)
+		{
+			//按逆时针换一个方向
+			turnLeft();
+			return false;
+		}
+		//检测前方是通路
+		else
+		{
+			//向前移动
+			goAhead();
+			return true;
+		}
+	}
+	//如果右侧是通路
+	else
+	{
+		Sleep(3000);
+		turnRight();
+		goAhead();
+		return true;
+	}
+
+    }
+     bool check1(int mazeX, int mazeY )//检查该位置上是否是墙壁
+    {
+        if(mazeshuzu[mazeY][mazeX] == 0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+};
+     bool check2(int mazeX,int mazeY)//检查该位置是否是出口
+    {//检查迷宫左右两侧
+	if(mazeX == 0 || mazeX == (height- 1))
+	{
+		if(mazeshuzu[mazeY][mazeX] == 1)
+		{
+			return true;
+		}
+	}
+	//检查迷宫上下两侧
+	if(mazeY == 0 || mazeY == (width-1) )
+	{
+		if(mazeshuzu[mazeY][mazeX] ==1)
+		{
+			return true;
+		}
+	}
+	return false;
+    }
+};
+int main()
+{
+    int shuzu[8][9]={
+                    {0,0,0,0,0,0,0,1,0},
+                    {0,0,0,0,1,0,0,1,0},
+                    {0,0,0,0,1,0,0,1,0},
+                    {0,0,0,0,1,0,0,1,0},
+                    {0,0,1,1,1,0,0,1,0},
+                    {0,0,1,0,1,1,1,1,0},
+                    {0,1,1,0,0,0,0,0,0},
+                    {0,1,0,0,0,0,0,0,0},
+                    };
+    Mazemap suka(&shuzu[0][0],8,9);//用构造函数来进行初始化地图；
+    suka.drawmap();
+    Mazeperson  bulie(1,7,1);
+    bulie.setPersonSpeed(1);//可以调节速度1到n档，
+    bulie.start();
+    return 0;
+}
+
